@@ -224,6 +224,11 @@ function toggleDiedSection() {
     arrow.classList.toggle('rotate-180');
 }
 
+function toggleMobileMenu() {
+    const menu = document.getElementById('mobile-menu');
+    menu.classList.toggle('hidden');
+}
+
 function renderTable(patients, containerId, headerId, isDiedList = false) {
     const tbody = document.getElementById(containerId);
     const headerRow = document.getElementById(headerId);
@@ -925,3 +930,4 @@ function calculateChiSquare(data) {
 
 window.renderAnalysis = renderAnalysis;
 window.closeAreaDetail = closeAreaDetail;
+window.toggleMobileMenu = toggleMobileMenu;

@@ -94,9 +94,36 @@
 
                 <!-- Mobile Menu Button -->
                 <div class="md:hidden">
-                    <button class="text-slate-600 hover:text-blue-600 p-2"><i
-                            class="fa-solid fa-bars text-xl"></i></button>
+                    <button onclick="toggleMobileMenu()" class="text-slate-600 hover:text-blue-600 p-2">
+                        <i class="fa-solid fa-bars text-xl"></i>
+                    </button>
                 </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white/95 backdrop-blur-xl border-t border-slate-200">
+            <div class="px-4 py-4 space-y-2">
+                <button onclick="showSection('dashboard'); toggleMobileMenu()"
+                    class="nav-link-mobile w-full text-left p-3 rounded-lg text-slate-600 font-medium hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                    <i class="fa-solid fa-chart-pie w-6"></i> Dashboard
+                </button>
+                <button onclick="showSection('register'); toggleMobileMenu()"
+                    class="nav-link-mobile w-full text-left p-3 rounded-lg text-slate-600 font-medium hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                    <i class="fa-solid fa-user-plus w-6"></i> New Patient
+                </button>
+                <button onclick="showSection('list'); toggleMobileMenu()"
+                    class="nav-link-mobile w-full text-left p-3 rounded-lg text-slate-600 font-medium hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                    <i class="fa-solid fa-clipboard-list w-6"></i> Visits List
+                </button>
+                <button onclick="showSection('analysis'); toggleMobileMenu()"
+                    class="nav-link-mobile w-full text-left p-3 rounded-lg text-slate-600 font-medium hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                    <i class="fa-solid fa-chart-line w-6"></i> Analysis
+                </button>
+                <button onclick="openSettings(); toggleMobileMenu()"
+                    class="nav-link-mobile w-full text-left p-3 rounded-lg text-slate-600 font-medium hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                    <i class="fa-solid fa-gear w-6"></i> Settings
+                </button>
             </div>
         </div>
     </nav>
