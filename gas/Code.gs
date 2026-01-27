@@ -69,15 +69,14 @@ function doPost(e) {
         
         // Handle Dynamic Column Creation (e.g. V6, V7)
         if (colIndex === -1) {
-          // If key looks like 'V' + number
-          if (/^V\d+$/.test(key)) {
+          // If key looks like 'V' + number OR is a specific field we want to allow dynamic creation for
+          // For now, let's allow ANY valid key to create a column to be safe for "Place of death" etc.
+          if (key && key.length > 0) {
             sheet.insertColumnAfter(sheet.getLastColumn());
             const newColIndex = sheet.getLastColumn();
             sheet.getRange(1, newColIndex).setValue(key); // Set Header
             headers.push(key); // Update local headers array
             colIndex = newColIndex - 1; // 0-based
-          } else {
-            continue; // Skip unknown fields that aren't V-cols
           }
         }
         

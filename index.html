@@ -43,6 +43,9 @@
         }
     </script>
 
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -59,6 +62,9 @@
         </div>
         <div
             class="absolute bottom-[-10%] left-[20%] w-[50%] h-[50%] bg-pink-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000">
+        </div>
+        <div
+            class="absolute bottom-[10%] right-[10%] w-[40%] h-[40%] bg-amber-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-3000">
         </div>
     </div>
 
@@ -81,6 +87,7 @@
                     <button onclick="showSection('register')" class="nav-link" data-section="register">New
                         Patient</button>
                     <button onclick="showSection('list')" class="nav-link" data-section="list">Visits List</button>
+                    <button onclick="showSection('analysis')" class="nav-link" data-section="analysis">Analysis</button>
                     <button onclick="openSettings()" class="text-slate-400 hover:text-blue-600 transition-colors"><i
                             class="fa-solid fa-gear"></i></button>
                 </div>
@@ -100,44 +107,145 @@
         <!-- Dashboard Section -->
         <section id="dashboard" class="page-section animate-fade-in">
             <header class="mb-8">
-                <h1 class="text-3xl font-display font-bold text-slate-900">Welcome Back</h1>
-                <p class="text-slate-500">Overview of your home visits program</p>
+                <h1 class="text-3xl font-display font-bold text-slate-900">Dashboard</h1>
+                <p class="text-slate-500">Real-time program analytics across <span id="dash-total-badge"
+                        class="font-bold text-blue-600">--</span> patients.</p>
             </header>
 
+            <!-- 1. Key Metrics Row -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+                <!-- Total -->
+                <div class="glass-card p-6 rounded-2xl relative overflow-hidden group">
+                    <div class="relative z-10">
+                        <p class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Total Census</p>
+                        <h3 class="text-4xl font-display font-bold text-slate-800" id="stat-total">--</h3>
+                        <p class="text-xs text-slate-400 mt-2">All registered</p>
+                    </div>
+                    <div
+                        class="absolute -right-4 -bottom-4 text-slate-100 group-hover:text-blue-50 transition-colors duration-500">
+                        <i class="fa-solid fa-users text-8xl"></i>
+                    </div>
+                </div>
+
+                <!-- Active -->
+                <div class="glass-card p-6 rounded-2xl relative overflow-hidden group">
+                    <div class="relative z-10">
+                        <p class="text-xs font-bold uppercase tracking-wider text-green-600 mb-1">Active Patients</p>
+                        <h3 class="text-4xl font-display font-bold text-slate-800" id="stat-active">--</h3>
+                        <p class="text-xs text-slate-400 mt-2">Survival: Alive</p>
+                    </div>
+                    <div
+                        class="absolute -right-4 -bottom-4 text-green-50/50 group-hover:text-green-100 transition-colors duration-500">
+                        <i class="fa-solid fa-heart-pulse text-8xl"></i>
+                    </div>
+                </div>
+
+                <!-- Died -->
+                <div class="glass-card p-6 rounded-2xl relative overflow-hidden group">
+                    <div class="relative z-10">
+                        <p class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Passed Away</p>
+                        <h3 class="text-4xl font-display font-bold text-slate-800" id="stat-died">--</h3>
+                        <p class="text-xs text-slate-400 mt-2">Survival: Died</p>
+                    </div>
+                    <div
+                        class="absolute -right-4 -bottom-4 text-slate-100 group-hover:text-slate-200 transition-colors duration-500">
+                        <i class="fa-solid fa-ribbon text-8xl"></i>
+                    </div>
+                </div>
+
+                <!-- Priority -->
+                <div class="glass-card p-6 rounded-2xl relative overflow-hidden group">
+                    <div class="relative z-10">
+                        <p class="text-xs font-bold uppercase tracking-wider text-amber-600 mb-1">High Priority</p>
+                        <h3 class="text-4xl font-display font-bold text-slate-800" id="stat-priority">--</h3>
+                        <p class="text-xs text-slate-400 mt-2">Priority Level 1</p>
+                    </div>
+                    <div
+                        class="absolute -right-4 -bottom-4 text-amber-50/50 group-hover:text-amber-100 transition-colors duration-500">
+                        <i class="fa-solid fa-star text-8xl"></i>
+                    </div>
+                </div>
+
+                <!-- Visits (Aggregate) -->
+                <div class="glass-card p-6 rounded-2xl relative overflow-hidden group">
+                    <div class="relative z-10">
+                        <p class="text-xs font-bold uppercase tracking-wider text-purple-600 mb-1">Total Visits</p>
+                        <h3 class="text-4xl font-display font-bold text-slate-800" id="stat-visits">--</h3>
+                        <p class="text-xs text-slate-400 mt-2">Completed visits</p>
+                    </div>
+                    <div
+                        class="absolute -right-4 -bottom-4 text-purple-50/50 group-hover:text-purple-100 transition-colors duration-500">
+                        <i class="fa-solid fa-person-walking-luggage text-8xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Main Analytics Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+
+                <!-- Clinical Breakdown (Diagnosis) -->
+                <div class="glass-card p-6 rounded-2xl lg:col-span-2 flex flex-col">
+                    <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-blue-500"></i> Diagnosis Distribution
+                    </h3>
+                    <div class="flex-1 relative min-h-[300px]">
+                        <canvas id="chart-diagnosis"></canvas>
+                    </div>
+                </div>
+
+                <!-- Demographics (Gender) -->
+                <div class="glass-card p-6 rounded-2xl flex flex-col">
+                    <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+                        <i class="fa-solid fa-venus-mars text-pink-500"></i> Gender Split
+                    </h3>
+                    <div class="flex-1 relative min-h-[200px] flex items-center justify-center">
+                        <canvas id="chart-gender"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Deep Analysis Section -->
+            <h2 class="text-xl font-display font-bold text-slate-800 mb-4 pl-1 border-l-4 border-indigo-500">Deep
+                Analysis</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <!-- Geo Distribution -->
+                <div class="glass-card p-6 rounded-2xl">
+                    <h3 class="text-sm font-bold text-slate-500 uppercase mb-4">Geographic Coverage</h3>
+                    <div class="relative h-[250px]">
+                        <canvas id="chart-geo"></canvas>
+                    </div>
+                </div>
+
+                <!-- Intent of Care -->
+                <div class="glass-card p-6 rounded-2xl">
+                    <h3 class="text-sm font-bold text-slate-500 uppercase mb-4">Intent of Care</h3>
+                    <div class="relative h-[250px]">
+                        <canvas id="chart-intent"></canvas>
+                    </div>
+                </div>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <!-- Stat Card 1 -->
-                <div class="glass-card p-6 rounded-2xl relative overflow-hidden group">
-                    <div class="relative z-10">
-                        <p class="text-sm font-medium text-slate-500 mb-1">Total Patients</p>
-                        <h3 class="text-3xl font-bold text-slate-800" id="stat-total">--</h3>
-                    </div>
-                    <div
-                        class="absolute right-0 bottom-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity transform group-hover:scale-110 duration-500">
-                        <i class="fa-solid fa-users text-6xl text-blue-600"></i>
+                <!-- Source of Referral -->
+                <div class="glass-card p-6 rounded-2xl">
+                    <h3 class="text-sm font-bold text-slate-500 uppercase mb-4">Referral Sources</h3>
+                    <div class="relative h-[200px]">
+                        <canvas id="chart-referral"></canvas>
                     </div>
                 </div>
-
-                <!-- Stat Card 2 -->
-                <div class="glass-card p-6 rounded-2xl relative overflow-hidden group">
-                    <div class="relative z-10">
-                        <p class="text-sm font-medium text-slate-500 mb-1">Active Visits</p>
-                        <h3 class="text-3xl font-bold text-slate-800" id="stat-active">--</h3>
-                    </div>
-                    <div
-                        class="absolute right-0 bottom-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity transform group-hover:scale-110 duration-500">
-                        <i class="fa-solid fa-person-walking-luggage text-6xl text-purple-600"></i>
+                <!-- Stage -->
+                <div class="glass-card p-6 rounded-2xl">
+                    <h3 class="text-sm font-bold text-slate-500 uppercase mb-4">Disease Stage</h3>
+                    <div class="relative h-[200px]">
+                        <canvas id="chart-stage"></canvas>
                     </div>
                 </div>
-
-                <!-- Stat Card 3 -->
-                <div class="glass-card p-6 rounded-2xl relative overflow-hidden group">
-                    <div class="relative z-10">
-                        <p class="text-sm font-medium text-slate-500 mb-1">High Priority</p>
-                        <h3 class="text-3xl font-bold text-slate-800" id="stat-priority">--</h3>
-                    </div>
-                    <div
-                        class="absolute right-0 bottom-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity transform group-hover:scale-110 duration-500">
-                        <i class="fa-solid fa-star text-6xl text-amber-500"></i>
+                <!-- Social Status -->
+                <div class="glass-card p-6 rounded-2xl">
+                    <h3 class="text-sm font-bold text-slate-500 uppercase mb-4">Social Status</h3>
+                    <div class="relative h-[200px]">
+                        <canvas id="chart-social"></canvas>
                     </div>
                 </div>
             </div>
@@ -456,31 +564,31 @@
                             <label
                                 class="flex items-center gap-2 text-sm text-slate-700 cursor-pointer hover:bg-slate-50 p-1 rounded">
                                 <input type="checkbox" data-col="visits" checked class="col-toggle accent-blue-600"
-                                    onchange="renderTable(appState.viewCtx)">
+                                    onchange="renderPatientLists()">
                                 No. of Visits
                             </label>
                             <label
                                 class="flex items-center gap-2 text-sm text-slate-700 cursor-pointer hover:bg-slate-50 p-1 rounded">
                                 <input type="checkbox" data-col="stage" class="col-toggle accent-blue-600"
-                                    onchange="renderTable(appState.viewCtx)">
+                                    onchange="renderPatientLists()">
                                 Stage
                             </label>
                             <label
                                 class="flex items-center gap-2 text-sm text-slate-700 cursor-pointer hover:bg-slate-50 p-1 rounded">
                                 <input type="checkbox" data-col="ecog" class="col-toggle accent-blue-600"
-                                    onchange="renderTable(appState.viewCtx)">
+                                    onchange="renderPatientLists()">
                                 ECOG
                             </label>
                             <label
                                 class="flex items-center gap-2 text-sm text-slate-700 cursor-pointer hover:bg-slate-50 p-1 rounded">
                                 <input type="checkbox" data-col="referral" class="col-toggle accent-blue-600"
-                                    onchange="renderTable(appState.viewCtx)">
+                                    onchange="renderPatientLists()">
                                 Referral Site
                             </label>
                             <label
                                 class="flex items-center gap-2 text-sm text-slate-700 cursor-pointer hover:bg-slate-50 p-1 rounded">
                                 <input type="checkbox" data-col="survival" class="col-toggle accent-blue-600"
-                                    onchange="renderTable(appState.viewCtx)">
+                                    onchange="renderPatientLists()">
                                 Survival Status
                             </label>
                         </div>
@@ -503,32 +611,161 @@
                 </div>
             </header>
 
-            <div class="glass-card rounded-2xl border border-white/50 shadow-lg overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left">
-                        <thead class="bg-slate-50/50 border-b border-slate-100">
-                            <tr id="table-header-row">
-                                <th class="p-4 font-semibold text-slate-600 text-sm">Patient</th>
-                                <th class="p-4 font-semibold text-slate-600 text-sm">Diagnosis</th>
-                                <th class="p-4 font-semibold text-slate-600 text-sm">Address</th>
-                                <th class="p-4 font-semibold text-slate-600 text-sm">Status</th>
-                                <th class="p-4 font-semibold text-slate-600 text-sm">Priority</th>
-                                <!-- Dynamic Headers will be appended here via JS, but we strictly define them in renderTable now -->
-                                <th class="p-4 font-semibold text-slate-600 text-sm text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="patients-table-body" class="divide-y divide-slate-100">
-                            <!-- JS Injected Rows -->
-                            <tr>
-                                <td colspan="6" class="p-8 text-center text-slate-400">Loading data...</td>
-                            </tr>
-                        </tbody>
-                    </table>
+            <!-- AREA GRID VIEW -->
+            <div id="area-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
+                <!-- Cards Injected via JS -->
+                <div class="col-span-full text-center text-slate-400 py-12">
+                    <i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i>
+                    <p>Loading Areas...</p>
                 </div>
-                <!-- Pagination / Footer -->
-                <div
-                    class="p-4 border-t border-slate-50 bg-slate-50/30 flex justify-between items-center text-sm text-slate-500">
-                    <span id="showing-count">Showing 0 patients</span>
+            </div>
+
+            <!-- AREA DETAIL VIEW (Hidden by default) -->
+            <div id="area-detail-view" class="hidden animate-slide-up">
+                <!-- Back Header -->
+                <div class="flex items-center gap-4 mb-6">
+                    <button onclick="closeAreaDetail()"
+                        class="p-2 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-colors group">
+                        <i class="fa-solid fa-arrow-left text-lg group-hover:-translate-x-1 transition-transform"></i>
+                    </button>
+                    <div>
+                        <h2 id="area-detail-title" class="text-2xl font-display font-bold text-slate-800">Area Name</h2>
+                        <p class="text-sm text-slate-500">Patient Details</p>
+                    </div>
+                </div>
+
+                <!-- Died Patients Table (Collapsible) -->
+                <div class="mb-4">
+                    <button onclick="toggleDiedSection()"
+                        class="w-full flex items-center justify-between p-4 bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors text-slate-500 font-bold group">
+                        <span class="flex items-center gap-2">
+                            <i class="fa-solid fa-ribbon text-slate-400"></i> Passed Away
+                            <span id="died-badge-count"
+                                class="text-xs bg-slate-200 text-slate-500 px-2 py-0.5 rounded-full ml-2">Counts:
+                                0</span>
+                        </span>
+                        <i id="died-arrow" class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                    </button>
+
+                    <div id="died-section-content" class="hidden mt-4 animate-fade-in">
+                        <div
+                            class="glass-card rounded-2xl border border-white/50 shadow-lg overflow-hidden bg-slate-50/50">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left opacity-75">
+                                    <thead class="bg-slate-100/50 border-b border-slate-200">
+                                        <tr id="table-header-row-died">
+                                            <!-- Headers Injected via JS -->
+                                        </tr>
+                                    </thead>
+                                    <tbody id="died-patients-body" class="divide-y divide-slate-200">
+                                        <!-- JS Injected Rows -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div
+                                class="p-4 border-t border-slate-100 bg-slate-100/30 flex justify-between items-center text-sm text-slate-500">
+                                <span id="showing-count-died">Showing 0 deceased patients</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Patients Table -->
+                <div class="mb-8">
+                    <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-heart-pulse text-green-500"></i> Active Patients
+                    </h2>
+                    <div class="glass-card rounded-2xl border border-white/50 shadow-lg overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left">
+                                <thead class="bg-slate-50/50 border-b border-slate-100">
+                                    <tr id="table-header-row-active">
+                                        <!-- Headers Injected via JS -->
+                                    </tr>
+                                </thead>
+                                <tbody id="active-patients-body" class="divide-y divide-slate-100">
+                                    <tr>
+                                        <td colspan="6" class="p-8 text-center text-slate-400">Loading data...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div
+                            class="p-4 border-t border-slate-50 bg-slate-50/30 flex justify-between items-center text-sm text-slate-500">
+                            <span id="showing-count-active">Showing 0 active patients</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Analysis Section -->
+        <section id="analysis" class="page-section hidden animate-fade-in">
+            <header class="mb-8">
+                <h1 class="text-3xl font-display font-bold text-slate-900">Advanced Analysis</h1>
+                <p class="text-slate-500">Explore relationships between variables</p>
+            </header>
+
+            <!-- Controls -->
+            <div class="glass-card p-6 rounded-2xl mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="form-group">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Variable 1 (X-Axis / Rows)</label>
+                        <select id="analysis-var1" class="input-field" onchange="renderAnalysis()">
+                            <option value="Gender">Gender</option>
+                            <option value="Diagnosis">Diagnosis</option>
+                            <option value="Adress">Address (Area)</option>
+                            <option value="Intent of care">Intent of Care</option>
+                            <option value="Stage of Disease">Stage of Disease</option>
+                            <option value="ECOG">ECOG Performance</option>
+                            <option value="Site of Referral">Referral Site</option>
+                            <option value="Servival Status">Survival Status</option>
+                            <option value="priority">Priority Level</option>
+                            <option value="number of visits">Visits Count</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Variable 2 (Legend /
+                            Columns)</label>
+                        <select id="analysis-var2" class="input-field" onchange="renderAnalysis()">
+                            <option value="">(None - Single Variable)</option>
+                            <option value="Gender">Gender</option>
+                            <option value="Diagnosis">Diagnosis</option>
+                            <option value="Adress">Address (Area)</option>
+                            <option value="Intent of care">Intent of Care</option>
+                            <option value="Stage of Disease">Stage of Disease</option>
+                            <option value="ECOG">ECOG Performance</option>
+                            <option value="Site of Referral">Referral Site</option>
+                            <option value="Servival Status">Survival Status</option>
+                            <option value="priority">Priority Level</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <div class="w-full p-4 bg-slate-50 rounded-xl border border-slate-200">
+                            <div class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Statistical
+                                Significance (Chi-Square)</div>
+                            <div id="stats-p-value" class="text-lg font-bold text-slate-700">--</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visualization -->
+            <div class="glass-card p-6 rounded-2xl mb-8 relative">
+                <h3 class="text-lg font-bold text-slate-800 mb-4">Visualization</h3>
+                <div class="relative h-[400px] w-full">
+                    <canvas id="analysis-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Pivot Table -->
+            <div class="glass-card p-6 rounded-2xl">
+                <h3 class="text-lg font-bold text-slate-800 mb-4">Data Table</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse" id="analysis-table">
+                        <!-- Dynamic Content -->
+                    </table>
                 </div>
             </div>
         </section>
@@ -563,6 +800,41 @@
             <button onclick="saveSettings()"
                 class="w-full mt-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors">Save
                 & Close</button>
+        </div>
+    </div>
+
+    <!-- Mark Died Modal -->
+    <div id="died-modal" class="fixed inset-0 z-[70] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-md transition-opacity" onclick="closeDiedModal()">
+        </div>
+        <div
+            class="glass-card bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md relative z-10 transform transition-all scale-100">
+            <h3 class="text-2xl font-bold text-slate-800 mb-2">Mark as Deceased</h3>
+            <p class="text-slate-500 mb-6" id="died-modal-patient-name">Patient Name</p>
+
+            <form id="died-form" class="space-y-4">
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Date of Death</label>
+                    <input type="date" id="died-date" required class="input-field">
+                </div>
+
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Place of Death</label>
+                    <select id="died-place" required class="input-field">
+                        <option value="">Select Place...</option>
+                        <option value="AVH">AVH</option>
+                        <option value="House">House</option>
+                        <option value="Other Hospital">Other Hospital</option>
+                    </select>
+                </div>
+
+                <div class="flex gap-3 mt-8">
+                    <button type="button" onclick="closeDiedModal()"
+                        class="flex-1 py-3 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 transition-colors">Cancel</button>
+                    <button type="submit"
+                        class="flex-1 py-3 rounded-xl bg-slate-800 text-white font-bold hover:bg-slate-900 transition-colors shadow-lg shadow-slate-500/30">Confirm</button>
+                </div>
+            </form>
         </div>
     </div>
 
