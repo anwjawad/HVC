@@ -636,6 +636,23 @@
                             class="pl-9 pr-4 py-2 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none shadow-sm transition-all"
                             placeholder="Search name, ID...">
                     </div>
+                    <div class="relative group z-10">
+                        <select id="sort-by"
+                            class="appearance-none pl-3 pr-8 py-2 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none shadow-sm transition-all bg-white text-sm font-medium text-slate-600 hover:text-blue-600 cursor-pointer">
+                            <option value="default">Sort: Default</option>
+                            <option value="az">Sort: A-Z</option>
+                            <option value="priority">Sort: Priority</option>
+                        </select>
+                        <i
+                            class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
+                    </div>
+
+                    <label
+                        class="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-200 shadow-sm cursor-pointer hover:bg-slate-50 transition-colors">
+                        <input type="checkbox" id="filter-priority"
+                            class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 border-gray-300">
+                        <span class="text-sm font-medium text-slate-600 select-none">High Priority</span>
+                    </label>
                 </div>
             </header>
 
@@ -867,6 +884,7 @@
     </div>
 
     <!-- Scripts -->
+    <div id="toast"></div>
     <script src="js/api.js"></script>
     <script src="js/app.js"></script>
 </body>

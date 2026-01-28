@@ -46,29 +46,42 @@ function setupRegistrationForm() {
     const form = document.getElementById('reg-form');
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-
         const btn = form.querySelector('button[type="submit"]');
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
-        btn.disabled = true;
 
+        // Collect Data
         const formData = new FormData(form);
         const data = {};
         formData.forEach((value, key) => data[key] = value);
 
-        console.log("Registering:", data);
+        // --- Optimistic Update ---
+        const tempPatient = { ...data };
+        // Add defaults if missing
+        if (!tempPatient['Pt file Num.']) tempPatient['Pt file Num.'] = "TEMP-" + Date.now();
+        if (!tempPatient['number of visits']) tempPatient['number of visits'] = 0;
+
+        // Update Local State
+        appState.patients.push(tempPatient);
+        appState.viewCtx.push(tempPatient);
+
+        renderDashboard();
+        renderPatientLists();
+
+        showToast("Patient Registered! Syncing...");
+        form.reset();
+        // -------------------------
 
         try {
             await API.registerPatient(data);
-            alert("Patient Registered Successfully!");
-            form.reset();
-            // Reload data
-            loadData();
+            // Success - Silent
+            // We could fetch real ID here if needed, but for now we trust the flow.
         } catch (err) {
-            alert("Error: " + err.message);
-        } finally {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
+            console.error(err);
+            showToast("Error Registering: " + err.message, "error");
+            // Rollback
+            appState.patients = appState.patients.filter(p => p !== tempPatient);
+            appState.viewCtx = appState.viewCtx.filter(p => p !== tempPatient);
+            renderDashboard();
+            renderPatientLists();
         }
     });
 }
@@ -372,6 +385,7 @@ async function handleQuickVisit(p) {
     // 2. Increment count
     let currentCount = parseInt(p['number of visits']) || 0;
     const newCount = currentCount + 1;
+    const oldVValue = p[vField];
 
     const today = new Date().toISOString().split('T')[0];
 
@@ -380,15 +394,19 @@ async function handleQuickVisit(p) {
     p['number of visits'] = newCount;
     renderPatientLists();
 
+    showToast(`Visit Recorded! (${vField})`);
+
     try {
         await API.updatePatient(p['Pt file Num.'], {
             [vField]: today,
             'number of visits': newCount
         });
-        alert(`Visit recorded! (${vField})`);
     } catch (e) {
-        alert("Failed to save visit: " + e.message);
-        loadData();
+        showToast("Failed to sync visit", "error");
+        // Rollback
+        p[vField] = oldVValue;
+        p['number of visits'] = currentCount;
+        renderPatientLists();
     }
 }
 
@@ -416,13 +434,21 @@ document.getElementById('died-form').addEventListener('submit', async (e) => {
     const place = document.getElementById('died-place').value;
     const p = currentDiedPatient;
 
+    // Backup
+    const backupStatus = p['Servival Status'];
+    const backupDate = p['Date of death'];
+    const backupPlace = p['Place of death'];
+
     // Optimistic UI
     p['Servival Status'] = 'Died';
     p['Date of death'] = date;
     p['Place of death'] = place;
 
     closeDiedModal();
-    renderPatientLists(); // Will move patient to Died list instantly
+    renderDashboard();
+    renderPatientLists();
+
+    showToast("Status Updated to Died");
 
     try {
         await API.updatePatient(p['Pt file Num.'], {
@@ -430,11 +456,14 @@ document.getElementById('died-form').addEventListener('submit', async (e) => {
             'Date of death': date,
             'Place of death': place
         });
-        alert("Patient status updated to Died.");
-        loadData(); // Reload to refresh stats fully
     } catch (e) {
-        alert("Failed to update status: " + e.message);
-        loadData();
+        showToast("Sync Error: " + e.message, "error");
+        // Rollback
+        p['Servival Status'] = backupStatus;
+        p['Date of death'] = backupDate;
+        p['Place of death'] = backupPlace;
+        renderDashboard();
+        renderPatientLists();
     }
 });
 
@@ -455,31 +484,54 @@ function getStatusClass(status) {
     return 'bg-slate-100 text-slate-600';
 }
 
+
 function setupFilters() {
     const areaInput = document.getElementById('filter-area');
     const searchInput = document.getElementById('filter-search');
+    const sortByInput = document.getElementById('sort-by');
+    const priorityInput = document.getElementById('filter-priority');
 
     const runFilter = () => {
         const areaTerm = areaInput.value.toLowerCase();
         const searchTerm = searchInput.value.toLowerCase();
+        const sortBy = sortByInput.value;
+        const onlyHighPriority = priorityInput.checked;
 
-        appState.viewCtx = appState.patients.filter(p => {
+        // 1. Filter
+        let filtered = appState.patients.filter(p => {
             // Filter by 'Adress' (City/Area) instead of 'Home Address'
             const pArea = (p['Adress'] || '').toLowerCase();
             const pName = (p['Pt Name'] || '').toLowerCase();
             const pId = (p['Pt file Num.'] || '').toString().toLowerCase();
+            const pPriority = parseInt(p['priority']) || 99;
 
             const matchArea = !areaTerm || pArea.includes(areaTerm);
             const matchSearch = !searchTerm || pName.includes(searchTerm) || pId.includes(searchTerm);
+            const matchPriority = !onlyHighPriority || pPriority === 1;
 
-            return matchArea && matchSearch;
+            return matchArea && matchSearch && matchPriority;
         });
 
+        // 2. Sort
+        if (sortBy === 'az') {
+            filtered.sort((a, b) => (a['Pt Name'] || '').localeCompare(b['Pt Name'] || ''));
+        } else if (sortBy === 'priority') {
+            filtered.sort((a, b) => {
+                const pA = parseInt(a['priority']) || 99;
+                const pB = parseInt(b['priority']) || 99;
+                return pA - pB; // Ascending (1 is high)
+            });
+        }
+        // Default: No specific sort (keep original order / reversed insertion if helpful, but existing is fine)
+
+        appState.viewCtx = filtered;
         renderPatientLists();
     };
 
     areaInput.addEventListener('input', runFilter);
     searchInput.addEventListener('input', runFilter);
+    sortByInput.addEventListener('change', runFilter);
+    priorityInput.addEventListener('change', runFilter);
 }
 
 // --- Dashboard & Analytics ---
@@ -931,3 +983,17 @@ function calculateChiSquare(data) {
 window.renderAnalysis = renderAnalysis;
 window.closeAreaDetail = closeAreaDetail;
 window.toggleMobileMenu = toggleMobileMenu;
+
+// --- Utilities ---
+function showToast(message, type = "success") {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
+
+    toast.textContent = message;
+    toast.style.background = type === "error" ? "#ef4444" : "#1e293b"; // Tailwind colors (red-500, slate-800)
+    toast.classList.add('show');
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
+}
