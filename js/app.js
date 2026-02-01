@@ -259,6 +259,7 @@ function renderTable(patients, containerId, headerId, isDiedList = false) {
     // 2. Rebuild Header
     let headerHTML = `
         <th class="p-4 font-semibold text-slate-600 text-sm">Patient</th>
+        <th class="p-4 font-semibold text-slate-600 text-sm">Phone</th>
         <th class="p-4 font-semibold text-slate-600 text-sm">Diagnosis</th>
         <th class="p-4 font-semibold text-slate-600 text-sm">Address</th>
         <th class="p-4 font-semibold text-slate-600 text-sm">Status</th>
@@ -276,7 +277,7 @@ function renderTable(patients, containerId, headerId, isDiedList = false) {
 
     if (patients.length === 0) {
         // Calculate colspan dynamically
-        const colCount = 6 + [showVisits, showStage, showEcog, showReferral, showSurvival].filter(Boolean).length;
+        const colCount = 7 + [showVisits, showStage, showEcog, showReferral, showSurvival].filter(Boolean).length;
         tbody.innerHTML = `<tr><td colspan="${colCount}" class="p-8 text-center text-slate-400">No patients found.</td></tr>`;
         return;
     }
@@ -314,6 +315,9 @@ function renderTable(patients, containerId, headerId, isDiedList = false) {
             <td class="p-4">
                 <div class="font-bold text-slate-800">${p['Pt Name']} ${priorityBadge}</div>
                 <div class="text-xs text-slate-400 font-mono">${p['Pt file Num.']}</div>
+            </td>
+            <td class="p-4">
+                <div class="text-sm text-slate-700 font-medium"><i class="fa-solid fa-phone text-slate-300 mr-2"></i>${p['phone No.'] || '-'}</div>
             </td>
             <td class="p-4">
                 <div class="text-sm text-slate-700">${p['Diagnosis']}</div>
