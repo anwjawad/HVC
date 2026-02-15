@@ -251,6 +251,7 @@ function renderTable(patients, containerId, headerId, isDiedList = false) {
 
     // 1. Determine Visible Extra Columns
     const showVisits = document.querySelector('input[data-col="visits"]')?.checked;
+    const showAge = document.querySelector('input[data-col="age"]')?.checked;
     const showStage = document.querySelector('input[data-col="stage"]')?.checked;
     const showEcog = document.querySelector('input[data-col="ecog"]')?.checked;
     const showReferral = document.querySelector('input[data-col="referral"]')?.checked;
@@ -267,6 +268,7 @@ function renderTable(patients, containerId, headerId, isDiedList = false) {
     `;
 
     if (showVisits) headerHTML += `<th class="p-4 font-semibold text-slate-600 text-sm">Visits</th>`;
+    if (showAge) headerHTML += `<th class="p-4 font-semibold text-slate-600 text-sm">Age</th>`;
     if (showStage) headerHTML += `<th class="p-4 font-semibold text-slate-600 text-sm">Stage</th>`;
     if (showEcog) headerHTML += `<th class="p-4 font-semibold text-slate-600 text-sm">ECOG</th>`;
     if (showReferral) headerHTML += `<th class="p-4 font-semibold text-slate-600 text-sm">Referral</th>`;
@@ -277,7 +279,7 @@ function renderTable(patients, containerId, headerId, isDiedList = false) {
 
     if (patients.length === 0) {
         // Calculate colspan dynamically
-        const colCount = 7 + [showVisits, showStage, showEcog, showReferral, showSurvival].filter(Boolean).length;
+        const colCount = 7 + [showVisits, showAge, showStage, showEcog, showReferral, showSurvival].filter(Boolean).length;
         tbody.innerHTML = `<tr><td colspan="${colCount}" class="p-8 text-center text-slate-400">No patients found.</td></tr>`;
         return;
     }
@@ -301,47 +303,48 @@ function renderTable(patients, containerId, headerId, isDiedList = false) {
         let specificAddr = p['Home Address '] || p['Home Address'] || '';
         let cityAddr = p['Adress'] || '';
 
+        // Clean up strings for logic
         if (specificAddr === 'N/A') specificAddr = '';
         if (cityAddr === 'N/A') cityAddr = '';
-        if (specificAddr.trim() === cityAddr.trim()) cityAddr = '';
-        if (!specificAddr && cityAddr) { specificAddr = cityAddr; cityAddr = ''; }
 
         const addrHtml = `
-             <div class="text-sm text-slate-700 font-medium">${specificAddr}</div>
-             <div class="text-xs text-slate-400">${cityAddr}</div>
+             <div class="text-sm text-slate-700 font-medium editable-cell" data-id="${p['Pt file Num.']}" data-field="Home Address " data-empty="Add Address">${specificAddr || 'Add Address'}</div>
+             <div class="text-xs text-slate-400 editable-cell" data-id="${p['Pt file Num.']}" data-field="Adress" data-empty="Select Area">${cityAddr || 'Select Area'}</div>
         `;
 
         let colsHTML = `
             <td class="p-4">
-                <div class="font-bold text-slate-800">${p['Pt Name']} ${priorityBadge}</div>
-                <div class="text-xs text-slate-400 font-mono">${p['Pt file Num.']}</div>
+                <div class="font-bold text-slate-800 editable-cell" data-id="${p['Pt file Num.']}" data-field="Pt Name">${p['Pt Name']}</div>
+                ${priorityBadge}
+                <div class="text-xs text-slate-400 font-mono editable-cell" data-id="${p['Pt file Num.']}" data-field="Pt file Num.">${p['Pt file Num.']}</div>
             </td>
             <td class="p-4">
-                <div class="text-sm text-slate-700 font-medium"><i class="fa-solid fa-phone text-slate-300 mr-2"></i>${p['phone No.'] || '-'}</div>
+                <div class="text-sm text-slate-700 font-medium editable-cell" data-id="${p['Pt file Num.']}" data-field="phone No."><i class="fa-solid fa-phone text-slate-300 mr-2"></i>${p['phone No.'] || '-'}</div>
             </td>
             <td class="p-4">
-                <div class="text-sm text-slate-700">${p['Diagnosis']}</div>
-                <div class="text-xs text-slate-400 italic">${p['Specific Diagnosis'] || ''}</div>
+                <div class="text-sm text-slate-700 editable-cell" data-id="${p['Pt file Num.']}" data-field="Diagnosis">${p['Diagnosis']}</div>
+                <div class="text-xs text-slate-400 italic editable-cell" data-id="${p['Pt file Num.']}" data-field="Specific Diagnosis" data-empty="-">${p['Specific Diagnosis'] || '-'}</div>
             </td>
             <td class="p-4">
                  ${addrHtml}
             </td>
             <td class="p-4">
-                <span class="text-xs font-semibold px-2 py-1 rounded-md ${getStatusClass(p['Intent of care'])}">
+                <span class="text-xs font-semibold px-2 py-1 rounded-md ${getStatusClass(p['Intent of care'])} editable-cell" data-id="${p['Pt file Num.']}" data-field="Intent of care">
                     ${p['Intent of care'] || 'Unknown'}
                 </span>
             </td>
             <td class="p-4">
-               <div class="text-sm font-bold text-slate-600">${p['priority'] || '-'}</div>
+               <div class="text-sm font-bold text-slate-600 editable-cell" data-id="${p['Pt file Num.']}" data-field="priority">${p['priority'] || '-'}</div>
             </td>
         `;
 
         // Extra Columns
-        if (showVisits) colsHTML += `<td class="p-4 text-sm text-slate-700 font-bold">${p['number of visits'] || 0}</td>`;
-        if (showStage) colsHTML += `<td class="p-4 text-sm text-slate-600">${p['Stage of Disease'] || '-'}</td>`;
-        if (showEcog) colsHTML += `<td class="p-4 text-sm text-slate-600">${p['ECOG'] || '-'}</td>`;
-        if (showReferral) colsHTML += `<td class="p-4 text-sm text-slate-600">${p['Site of Referral'] || '-'}</td>`;
-        if (showSurvival) colsHTML += `<td class="p-4 text-sm text-slate-600">${p['Servival Status'] || '-'}</td>`;
+        if (showVisits) colsHTML += `<td class="p-4 text-sm text-slate-700 font-bold editable-cell" data-id="${p['Pt file Num.']}" data-field="number of visits">${p['number of visits'] || 0}</td>`;
+        if (showAge) colsHTML += `<td class="p-4 text-sm text-slate-600 editable-cell" data-id="${p['Pt file Num.']}" data-field="Age">${p['Age'] || '-'}</td>`;
+        if (showStage) colsHTML += `<td class="p-4 text-sm text-slate-600 editable-cell" data-id="${p['Pt file Num.']}" data-field="Stage of Disease">${p['Stage of Disease'] || '-'}</td>`;
+        if (showEcog) colsHTML += `<td class="p-4 text-sm text-slate-600 editable-cell" data-id="${p['Pt file Num.']}" data-field="ECOG">${p['ECOG'] || '-'}</td>`;
+        if (showReferral) colsHTML += `<td class="p-4 text-sm text-slate-600 editable-cell" data-id="${p['Pt file Num.']}" data-field="Site of Referral">${p['Site of Referral'] || '-'}</td>`;
+        if (showSurvival) colsHTML += `<td class="p-4 text-sm text-slate-600 editable-cell" data-id="${p['Pt file Num.']}" data-field="Servival Status">${p['Servival Status'] || '-'}</td>`;
 
         // Actions
         colsHTML += `<td class="p-4 text-right flex justify-end gap-2">`;
@@ -372,7 +375,111 @@ function renderTable(patients, containerId, headerId, isDiedList = false) {
         }
         tr.querySelector('.btn-transfer').addEventListener('click', () => handleTransfer(p));
 
+        // Bind Inline Edits
+        tr.querySelectorAll('.editable-cell').forEach(cell => {
+            cell.addEventListener('click', (e) => handleInlineEdit(e, p));
+            cell.style.cursor = 'pointer';
+            cell.title = 'Click to edit';
+        });
+
         tbody.appendChild(tr);
+    });
+}
+
+function handleInlineEdit(e, patient) {
+    const cell = e.target;
+    // Prevent nested inputs
+    if (cell.querySelector('input') || cell.querySelector('select') || cell.tagName === 'INPUT' || cell.tagName === 'SELECT') return;
+
+    const field = cell.dataset.field;
+    const currentVal = patient[field] || '';
+
+    // Define Options for Selects
+    const optionsMap = {
+        'Intent of care': ['Palliative Care', 'Curative', 'End of Life'],
+        'Stage of Disease': ['NED', 'Stage 1', 'Stage 2', 'Stage 3', 'Stage 4'],
+        'Adress': ['Hebron', 'Jericho', 'Jerusalem', 'Bethlehem', 'Ramallah', 'Nablus', 'Jenin', 'Tulkarm', 'Qalqilya', 'Salfit'],
+        'Site of Referral': ['Primary Dr', 'Department'],
+        'Servival Status': ['Alive', 'Died'],
+        'Gender': ['Male', 'Female']
+    };
+
+    let input;
+
+    if (optionsMap[field]) {
+        // SELECT INPUT
+        input = document.createElement('select');
+        input.className = "w-full bg-blue-50 border border-blue-200 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500 outline-none";
+
+        // Add Default/Current option if not in list (optional, but good for safety)
+        let found = false;
+        optionsMap[field].forEach(opt => {
+            const option = document.createElement('option');
+            option.value = opt;
+            option.text = opt;
+            if (opt === currentVal) { option.selected = true; found = true; }
+            input.appendChild(option);
+        });
+
+        if (!found && currentVal) {
+            const option = document.createElement('option');
+            option.value = currentVal;
+            option.text = currentVal;
+            option.selected = true;
+            input.appendChild(option);
+        }
+    } else {
+        // TEXT/NUMBER INPUT
+        input = document.createElement('input');
+        input.type = (field === 'priority' || field === 'Age' || field === 'number of visits' || field === 'ECOG') ? 'number' : 'text';
+        input.value = currentVal === 'N/A' || currentVal === '-' ? '' : currentVal;
+        input.className = "w-full bg-blue-50 border border-blue-200 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500 outline-none";
+    }
+
+    // Swap
+    cell.innerHTML = '';
+    cell.appendChild(input);
+    input.focus();
+
+    // Event: Save on specific actions
+    const save = async () => {
+        let newVal = input.value.trim();
+        if (newVal === '') newVal = ''; // normalize
+
+        if (newVal === currentVal) {
+            cell.innerHTML = currentVal || cell.dataset.empty || '-';
+            return;
+        }
+
+        // Optimistic Update
+        const originalId = patient['Pt file Num.']; // PRESERVE ID before update
+        patient[field] = newVal;
+        cell.innerText = newVal || cell.dataset.empty || '-';
+
+        // Custom Logic for specific fields if needed (e.g. updating badges)
+        if (field === 'Intent of care') {
+            cell.className = `text-xs font-semibold px-2 py-1 rounded-md ${getStatusClass(newVal)} editable-cell`;
+        }
+
+        showToast(`Saved ${field}`);
+
+        try {
+            // Use originalId, because if we edited the ID itself, the backend needs the OLD one to find the row
+            await API.updatePatient(originalId, { [field]: newVal });
+        } catch (err) {
+            console.error(err);
+            showToast("Failed to save " + field, "error");
+            // Rollback UI
+            patient[field] = currentVal;
+            cell.innerText = currentVal || cell.dataset.empty || '-';
+        }
+    };
+
+    input.addEventListener('blur', () => { setTimeout(save, 100); });
+    input.addEventListener('keydown', (k) => {
+        if (k.key === 'Enter') {
+            input.blur();
+        }
     });
 }
 
